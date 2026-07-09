@@ -9,17 +9,15 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@primeicons/react": "8.0.0-alpha.1",
-    "@primeuix/themes": "3.0.0-rc.1",
     "axios": "^1.18.1",
     "clsx": "^2.1.1",
     "js-cookie": "^3.0.8",
     "next": "16.2.10",
-    "primereact": "11.0.0-rc.1",
+    "primeicons": "^7.0.0",
+    "primereact": "^10.9.8",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "react-hook-form": "^7.81.0",
-    "tailwind-merge": "^3.6.0"
+    "react-hook-form": "^7.81.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
