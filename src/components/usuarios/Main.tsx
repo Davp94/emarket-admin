@@ -18,7 +18,9 @@ import { InputText } from 'primereact/inputtext';
 import { Tag } from 'primereact/tag';
 import { ProductService } from '@/service/ProductService';
 import { UsuarioResponse } from '@/types/response/UsuarioResponse';
-import { confirmDialog } from 'primereact/confirmdialog';
+import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
+import { ActionTypeEnum } from '@/constant/action.enum';
+import UsuariosForm from './Form';
 
 
 export default function UsuariosMain() {
@@ -41,17 +43,23 @@ export default function UsuariosMain() {
     }, []);
 
     const openNew = () => {
-        setFlagAction(1);
+        setFlagAction(ActionTypeEnum.CREATE);
         setUsuariosDialog(true);
     };
 
-    const hideDialog = (updateData: boolean) => {
+    const hideDialog = (updateData?: boolean) => {
         if(updateData) {
             initComponent();
         }
         setUsuario(null);
         setUsuariosDialog(false);
     };
+
+    const editUsuario = (usuario:UsuarioResponse) => {
+        setFlagAction(ActionTypeEnum.UPDATE);
+        setUsuario({...usuario});
+        setUsuariosDialog(true);
+    }
 
     const confirmDeleteUsuario = (usuario: UsuarioResponse) => {
         confirmDialog({
@@ -107,6 +115,7 @@ export default function UsuariosMain() {
     return (
         <div>
             <Toast ref={toast} />
+            <ConfirmDialog />
             <div className="card">
                 <Toolbar className="mb-4" left={leftToolbarTemplate} right={rightToolbarTemplate}></Toolbar>
 
@@ -122,58 +131,19 @@ export default function UsuariosMain() {
                 </DataTable>
             </div>
 
-            <Dialog visible={usuariosDialog} style={{ width: '32rem' }} breakpoints={{ '960px': '75vw', '641px': '90vw' }} header="Product Details" modal className="p-fluid" footer={productDialogFooter} onHide={hideDialog}>
-                {product.image && <img src={`https://primefaces.org/cdn/primereact/images/product/${product.image}`} alt={product.image} className="product-image block m-auto pb-3" />}
-                <div className="field">
-                    <label htmlFor="name" className="font-bold">
-                        Name
-                    </label>
-                    <InputText id="name" value={product.name} onChange={(e) => onInputChange(e, 'name')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.name })} />
-                    {submitted && !product.name && <small className="p-error">Name is required.</small>}
-                </div>
-                <div className="field">
-                    <label htmlFor="description" className="font-bold">
-                        Description
-                    </label>
-                    <InputTextarea id="description" value={product.description} onChange={(e:ChangeEvent<HTMLTextAreaElement>) => onInputTextAreaChange(e, 'description')} required rows={3} cols={20} />
-                </div>
-
-                <div className="field">
-                    <label className="mb-3 font-bold">Category</label>
-                    <div className="formgrid grid">
-                        <div className="field-radiobutton col-6">
-                            <RadioButton inputId="category1" name="category" value="Accessories" onChange={onCategoryChange} checked={product.category === 'Accessories'} />
-                            <label htmlFor="category1">Accessories</label>
-                        </div>
-                        <div className="field-radiobutton col-6">
-                            <RadioButton inputId="category2" name="category" value="Clothing" onChange={onCategoryChange} checked={product.category === 'Clothing'} />
-                            <label htmlFor="category2">Clothing</label>
-                        </div>
-                        <div className="field-radiobutton col-6">
-                            <RadioButton inputId="category3" name="category" value="Electronics" onChange={onCategoryChange} checked={product.category === 'Electronics'} />
-                            <label htmlFor="category3">Electronics</label>
-                        </div>
-                        <div className="field-radiobutton col-6">
-                            <RadioButton inputId="category4" name="category" value="Fitness" onChange={onCategoryChange} checked={product.category === 'Fitness'} />
-                            <label htmlFor="category4">Fitness</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="formgrid grid">
-                    <div className="field col">
-                        <label htmlFor="price" className="font-bold">
-                            Price
-                        </label>
-                        <InputNumber id="price" value={product.price} onValueChange={(e) => onInputNumberChange(e, 'price')} mode="currency" currency="USD" locale="en-US" />
-                    </div>
-                    <div className="field col">
-                        <label htmlFor="quantity" className="font-bold">
-                            Quantity
-                        </label>
-                        <InputNumber id="quantity" value={product.quantity} onValueChange={(e) => onInputNumberChange(e, 'quantity')} />
-                    </div>
-                </div>
+            <Dialog visible={usuariosDialog} style={{ width: '32rem' }} breakpoints={{ '960px': '75vw', '641px': '90vw' }} header="Product Details" modal className="p-fluid" onHide={hideDialog}>
+                
+                {[ActionTypeEnum.CREATE, ActionTypeEnum.UPDATE].includes(flagAction) && (
+                    <UsuariosForm 
+                        usuario={usuario}
+                        hideDialog={hideDialog}
+                        flagAction={flagAction}
+                        toast={toast}
+                    />
+                )}
+                {flagAction == ActionTypeEnum.READ && (
+                    <div>Datos del usuario</div>
+                )}
             </Dialog>
         </div>
     );
