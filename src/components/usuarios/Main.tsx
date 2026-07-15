@@ -131,7 +131,7 @@ export default function UsuariosMain() {
                 </DataTable>
             </div>
 
-            <Dialog visible={usuariosDialog} style={{ width: '32rem' }} breakpoints={{ '960px': '75vw', '641px': '90vw' }} header="Product Details" modal className="p-fluid" onHide={hideDialog}>
+            <Dialog visible={usuariosDialog} style={{ width: '48rem' }} breakpoints={{ '960px': '75vw', '641px': '90vw' }} header="Usuarios Dialog" modal className="p-fluid" onHide={hideDialog}>
                 
                 {[ActionTypeEnum.CREATE, ActionTypeEnum.UPDATE].includes(flagAction) && (
                     <UsuariosForm 
