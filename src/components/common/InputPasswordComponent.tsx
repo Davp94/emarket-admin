@@ -5,8 +5,8 @@ interface InputPasswordComponentProps {
     label?: string;
     placeholder?: string;
     name: string;
-    control: Control<any>;
-    rules: RegisterOptions | null;
+    control: any;
+    rules?: RegisterOptions | null;
     toggleMask?: boolean;
     feedback?: boolean;
 }

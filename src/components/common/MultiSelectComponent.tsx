@@ -7,8 +7,8 @@ interface MultiSelectComponentProps {
   label?: string;
   placeholder?: string;
   name: string;
-  control: Control<any>;
-  rules: RegisterOptions | null;
+  control: any;
+  rules?: RegisterOptions | null;
   options: any[];
   optionLabel?: string;
   optionValue?: string;

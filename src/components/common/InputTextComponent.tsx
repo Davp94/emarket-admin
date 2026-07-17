@@ -5,8 +5,8 @@ interface InputTextComponentProps {
   label?: string;
   placeholder?: string;
   name: string;
-  control: Control<any>;
-  rules: RegisterOptions | null;
+  control: any;
+  rules?: RegisterOptions | null;
 }
 
 export default function InputTextComponent({

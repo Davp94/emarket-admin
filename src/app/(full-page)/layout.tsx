@@ -6,8 +6,9 @@ export default function FullPageLayout({
 
     return (
         <>
-            <h1>FullPage Layout</h1>
+          <div className="min-h-screen w-full flex items-center justify-center">
             {children}
+          </div>
         </>
     )
 }

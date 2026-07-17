@@ -6,8 +6,8 @@ interface CalendarComponentProps {
   label?: string;
   placeholder?: string;
   name: string;
-  control: Control<any>;
-  rules: RegisterOptions | null;
+  control: any;
+  rules?: RegisterOptions | null;
   dateFormat?: string;
   minDate?: Date;
   maxDate?: Date;

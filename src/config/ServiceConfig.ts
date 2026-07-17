@@ -1,3 +1,4 @@
+import { AuthService } from "@/service/AuthService";
 import axios from "axios";
 import Cookies from "js-cookie";
 
@@ -14,7 +15,13 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use(
     async (config: any) => {
         let token = Cookies.get('token');
-        if (token) {
+        if (token && AuthService.isTokenExpired()) {
+            try {
+                token = (await apiClient.post('/auth/refresh-token')).data.token;
+            } catch (error) {
+                throw new Error('Error refrescando el token')
+            }
+        } else {
             config.headers.Authorization = `Bearer ${token}`;
         }
         return config;

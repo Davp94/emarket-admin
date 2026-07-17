@@ -48,7 +48,7 @@ export default function UsuariosForm({
 }: UsuariosFormProps) {
   const [roles, setRoles] = useState<RolResponse[]>([]);
   const [totalSize, setTotalSize] = useState(0);
-  const [filesSelected, setFilesSelected] = useState([]);
+  const [filesSelected, setFilesSelected] = useState<any[]>([]);
   const fileUploadRef = useRef<FileUpload>(null);
   const [nacionalidad, setNacionalidad] = useState<any[]>([
     { id: 1, label: "Boliviana" },
@@ -62,7 +62,7 @@ export default function UsuariosForm({
     { id: 3, label: "Otro" },
   ]);
 
-  const{ getAllRoles} = useRoles();
+  const{ getAllRoles, loading, error} = useRoles();
 
   const {
     control,
@@ -196,15 +196,14 @@ export default function UsuariosForm({
   };
 
   const itemTemplate = (inFile: object, props: ItemTemplateOptions) => {
-    const file = inFile as File;
+    const file = inFile as any; // may include objectURL provided by upload component
     return (
       <div className="flex align-items-center flex-wrap">
         <div className="flex align-items-center" style={{ width: "40%" }}>
-          // @ts-ignore
           <img
             alt={file.name}
             role="presentation"
-            src={file.objectURL}
+            src={file.objectURL || URL.createObjectURL(file)}
             width={100}
           />
           <span className="flex flex-column text-left ml-3">
