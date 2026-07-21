@@ -117,10 +117,10 @@ export default function UsuariosMain() {
             <Toast ref={toast} />
             <ConfirmDialog />
             <div className="card">
-                <Toolbar className="mb-4" left={leftToolbarTemplate} right={rightToolbarTemplate}></Toolbar>
+                <Toolbar className="mb-4" start={leftToolbarTemplate} end={rightToolbarTemplate}></Toolbar>
 
-                <DataTable ref={dt} value={usuarios} 
-                        dataKey="id"  paginator rows={10} rowsPerPageOptions={[5, 10, 25]}
+                <DataTable id="usuariosTable" ref={dt} value={usuarios} 
+                        dataKey="id"  paginator rows={10} rowsPerPageOptions={[10, 20, 50]}
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                         currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products" globalFilter={globalFilter} header={header}
                 >
