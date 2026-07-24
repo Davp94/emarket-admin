@@ -9,7 +9,7 @@ import { useState } from "react";
 
 export const useInventario = () => {
     const [loading, setLoading] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null)
     
     const getProductosPaginacion = async (params: {
         pageNumber?: number;
@@ -50,6 +50,20 @@ export const useInventario = () => {
         }
     }
 
+    const getProductosAlmacen = async (almacenId: number): Promise<ProductoResponse[]> => {
+        setLoading(true);
+        setError("");
+        try {
+            const response = await InventarioService.getProductosAlmacen(almacenId);
+            return response;
+        } catch (error) {
+            setError("Error al obtener los productos");
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    }
+
     const getSucursales = async (): Promise<SucursalResponse[]> => {
         setLoading(true);
         setError("");
@@ -68,6 +82,7 @@ export const useInventario = () => {
         getProductosPaginacion,
         getAlmacenesBySucursal,
         getSucursales,
+        getProductosAlmacen,
         loading,
         error
     };

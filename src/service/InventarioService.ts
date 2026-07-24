@@ -30,15 +30,15 @@ export class InventarioService {
         }
     }
 
-    // public static async getProductosAlmacen(almacenId: number): Promise{
-    //     try {
-    //         const response = await apiClient.get<RolResponse>(`/roles/${id}`);
-    //         return response.data; 
-    //     } catch (error) {
-    //         console.error('Error al obtener el rol:', error);
-    //         throw new Error('Error obteniendo el rol');
-    //     }
-    // }
+    public static async getProductosAlmacen(almacenId: number): Promise<ProductoResponse[]>{
+        try {
+            const response = await apiClient.get<ProductoResponse[]>(`/productos/almacen/${almacenId}`);
+            return response.data; 
+        } catch (error) {
+            console.error('Error al obtener los productos:', error);
+            throw new Error('Error obteniendo los productos');
+        }
+    }
 
     public static async getAlmacenes(sucursalId: number): Promise<AlmacenResponse[]>{
         try {

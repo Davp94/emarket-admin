@@ -1,4 +1,5 @@
 "use client";
+import { AuthProvider } from "@/state-management/context/AuthContext";
 import Link from "next/link";
 import { Button } from "primereact/button";
 import { Menu } from "primereact/menu";
@@ -60,7 +61,11 @@ export default function MainLayout({
               onClick={(e) => topbarMenu.current?.toggle(e)}
             />
           </header>
-          <main className="flex-1 overflow-auto p-4">{children}</main>
+          <main className="flex-1 overflow-auto p-4">
+              <AuthProvider>
+                {children}
+              </AuthProvider>
+          </main>
         </div>
       </div>
     </>

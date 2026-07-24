@@ -4,6 +4,7 @@ import "./globals.css";
 import { PrimeReactProvider, PrimeReactContext } from 'primereact/api';
 import "primereact/resources/themes/lara-light-cyan/theme.css";
 import 'primeicons/primeicons.css';
+import { AuthProvider } from "@/state-management/context/AuthContext";
         
 
 const geistSans = Geist({

@@ -16,6 +16,8 @@ import { AlmacenResponse } from "@/types/response/AlmacenResponse";
 import { useRouter } from "next/navigation";
 import { Dropdown } from "primereact/dropdown";
 import { useInventario } from "@/hooks/useInventario";
+import { useThemeStore } from "@/state-management/zustand/useThemeStore";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export default function InventarioMain() {
   const [productos, setProductos] =
@@ -36,7 +38,8 @@ export default function InventarioMain() {
     sortField: "",
     sortOrder: "ASC" as "ASC" | "DESC",
   });
-
+  const theme = useThemeStore((state)=>state.theme);
+  const { permissions } = usePermissions();
   const { getSucursales, getAlmacenesBySucursal, getProductosPaginacion } = useInventario();
 
   const initComponent = async () => {
@@ -159,6 +162,7 @@ export default function InventarioMain() {
           outlined
           className="mr-2"
           onClick={() => console.log('')}
+          disabled={!permissions.includes('ADMINISTRADOR')}
         />
         <Button
           icon="pi pi-trash"
@@ -203,7 +207,7 @@ export default function InventarioMain() {
   );
 
   return (
-    <div>
+    <div className={theme == 'dark' ? 'text-amber-300': 'text-blue-400'}>
       <Toast ref={toast} />
       <div className="card">
         <Toolbar
