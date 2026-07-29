@@ -1,3 +1,5 @@
+import { DocumentoRequest } from "./DocumentoRequest";
+
 export interface UsuarioRequest {
     username: string;
     correo: string;
@@ -10,5 +12,5 @@ export interface UsuarioRequest {
     direccion: string;
     nacionalidad: string;
     roles: number[];
-    documentos: any[];
+    documentos: DocumentoRequest[];
 }

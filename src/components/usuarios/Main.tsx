@@ -1,25 +1,18 @@
 "use client";
-import React, { useState, useEffect, useRef, ChangeEvent } from 'react';
-import { classNames } from 'primereact/utils';
+import React, { useState, useEffect, useRef } from 'react';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Toast } from 'primereact/toast';
 import { Button } from 'primereact/button';
-import { FileUpload } from 'primereact/fileupload';
-import { Rating } from 'primereact/rating';
 import { Toolbar } from 'primereact/toolbar';
-import { InputTextarea } from 'primereact/inputtextarea';
 import { IconField } from 'primereact/iconfield';
 import { InputIcon } from 'primereact/inputicon';
-import { RadioButton, RadioButtonChangeEvent } from 'primereact/radiobutton';
-import { InputNumber,InputNumberValueChangeEvent } from 'primereact/inputnumber';
-import { Dialog } from 'primereact/dialog';
 import { InputText } from 'primereact/inputtext';
-import { Tag } from 'primereact/tag';
-import { ProductService } from '@/service/ProductService';
+import { Dialog } from 'primereact/dialog';
 import { UsuarioResponse } from '@/types/response/UsuarioResponse';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import { ActionTypeEnum } from '@/constant/action.enum';
+import { useUsuarios } from '@/hooks/useUsuarios';
 import UsuariosForm from './Form';
 
 
@@ -33,9 +26,15 @@ export default function UsuariosMain() {
     const toast = useRef<Toast>(null);
     const dt = useRef<DataTable<UsuarioResponse[]>>(null);
 
+    const { getUsuarios, deleteUsuario } = useUsuarios();
+
     const initComponent = async () => {
-      //TODO call service usuarios
-      setUsuarios([]);
+      try {
+        const data = await getUsuarios();
+        setUsuarios(data);
+      } catch (error) {
+        toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Error al cargar los usuarios', life: 3000 });
+      }
     };
 
     useEffect(() => {
@@ -67,14 +66,19 @@ export default function UsuariosMain() {
             header: 'Confirmation',
             icon: 'pi pi-exclamation-triangle',
             defaultFocus: 'accept',
-            accept: () => deleteUsuario(usuario),
+            accept: () => handleDeleteUsuario(usuario),
             reject: () => toast.current?.show({ severity: 'info', summary: 'Operacion cancelada', detail: 'Usuario no eliminado', life: 3000 }),
         });
     };
 
-    const deleteUsuario = (usuario: UsuarioResponse) => {
-        //TODO call service delete usuario
-        toast.current?.show({ severity: 'success', summary: 'Successful', detail: 'Usuario Eliminado', life: 3000 });
+    const handleDeleteUsuario = async (usuario: UsuarioResponse) => {
+        try {
+            await deleteUsuario(usuario.id);
+            initComponent();
+            toast.current?.show({ severity: 'success', summary: 'Successful', detail: 'Usuario Eliminado', life: 3000 });
+        } catch (error) {
+            toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Error al eliminar el usuario', life: 3000 });
+        }
     };
 
     const exportCSV = () => {

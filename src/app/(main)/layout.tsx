@@ -15,6 +15,9 @@ export default function MainLayout({
   const navigationItems = [
     { name: "Home", href: "/", icon: "pi pi-home" },
     { name: "Usuarios", href: "/usuarios", icon: "pi pi-user" },
+    { name: "Roles", href: "/roles", icon: "pi pi-shield" },
+    { name: "Sucursales", href: "/sucursales", icon: "pi pi-building" },
+    { name: "Almacenes", href: "/almacenes", icon: "pi pi-warehouse" },
     { name: "Inventario", href: "/inventario", icon: "pi pi-box" },
     { name: "Test", href: "/test", icon: "pi pi-box" },
   ];

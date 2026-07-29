@@ -1,11 +1,11 @@
 import { ActionTypeEnum } from "@/constant/action.enum";
 import { RolResponse } from "@/types/response/RolResponse";
 import { UsuarioResponse } from "@/types/response/UsuarioResponse";
-import { InputText } from "primereact/inputtext";
 import { Toast } from "primereact/toast";
 import { RefObject, useEffect, useRef, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import InputTextComponent from "../common/InputTextComponent";
+import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
 import InputPasswordComponent from "../common/InputPasswordComponent";
 import CalendarComponent from "../common/CalendarComponent";
@@ -16,6 +16,9 @@ import { FileUpload, FileUploadHeaderTemplateOptions, FileUploadSelectEvent, Fil
 import { ProgressBar } from "primereact/progressbar";
 import { Tag } from "primereact/tag";
 import { useRoles } from "@/hooks/useRoles";
+import { useUsuarios } from "@/hooks/useUsuarios";
+import { UsuarioRequest } from "@/types/request/UsuarioRequest";
+import { DocumentoRequest } from "@/types/request/DocumentoRequest";
 
 interface UsuariosFormProps {
   usuario: UsuarioResponse | null;
@@ -31,13 +34,18 @@ interface UsuarioFormValues {
   password: string;
   nombres: string;
   apellidos: string;
-  fechaNacimiento: string;
+  fechaNacimiento: Date | string | null;
   genero: string;
   telefono: string;
   direccion: string;
   nacionalidad: string;
   roles: number[];
-  documentos: any[];
+}
+
+interface FileDocumentItem {
+  file: File;
+  detalle: string;
+  tipo: string;
 }
 
 export default function UsuariosForm({
@@ -48,29 +56,29 @@ export default function UsuariosForm({
 }: UsuariosFormProps) {
   const [roles, setRoles] = useState<RolResponse[]>([]);
   const [totalSize, setTotalSize] = useState(0);
-  const [filesSelected, setFilesSelected] = useState<any[]>([]);
+  const [fileDocuments, setFileDocuments] = useState<FileDocumentItem[]>([]);
   const fileUploadRef = useRef<FileUpload>(null);
-  const [nacionalidad, setNacionalidad] = useState<any[]>([
+
+  const [nacionalidad] = useState<any[]>([
     { id: 1, label: "Boliviana" },
     { id: 2, label: "Ecuatoriana" },
     { id: 3, label: "Mexicana" },
   ]);
 
-  const [generos, setGeneros] = useState<any[]>([
+  const [generos] = useState<any[]>([
     { id: 1, label: "Masculino" },
     { id: 2, label: "Femenino" },
     { id: 3, label: "Otro" },
   ]);
 
-  const{ getAllRoles, loading, error} = useRoles();
+  const { getAllRoles } = useRoles();
+  const { createUsuario, updateUsuario } = useUsuarios();
 
   const {
     control,
-    formState: { errors },
+    handleSubmit,
     reset,
     setValue,
-    getValues,
-    watch,
   } = useForm<UsuarioFormValues>({
     defaultValues: {
       id: 0,
@@ -79,41 +87,99 @@ export default function UsuariosForm({
       password: "",
       nombres: "",
       apellidos: "",
-      fechaNacimiento: "",
+      fechaNacimiento: null,
       genero: "",
       telefono: "",
       direccion: "",
       nacionalidad: "",
-      roles: [0],
-      documentos: [],
+      roles: [],
     },
   });
 
   const initForm = async () => {
-    //TODO call service
-    const rolesResponse: RolResponse[] = await getAllRoles();
-    setRoles(rolesResponse);
-    if (usuario != null && flagAction == ActionTypeEnum.UPDATE) {
+    try {
+      const rolesResponse: RolResponse[] = await getAllRoles();
+      setRoles(rolesResponse || []);
+    } catch (err) {
+      console.error("Error loading roles:", err);
+    }
+
+    if (usuario != null && flagAction === ActionTypeEnum.UPDATE) {
       setValue("id", usuario.id);
-      setValue("correo", usuario.correo);
-      setValue("nombres", usuario.nombres);
-      setValue("apellidos", usuario.apellidos);
-      setValue("fechaNacimiento", usuario.fechaNacimiento);
-      setValue("telefono", usuario.telefono);
-      setValue("direccion", usuario.direccion);
-      setValue("nacionalidad", usuario.nacionalidad);
-      setValue("roles", usuario.roles);
+      setValue("username", usuario.username || "");
+      setValue("correo", usuario.correo || "");
+      setValue("nombres", usuario.nombres || "");
+      setValue("apellidos", usuario.apellidos || "");
+      setValue("fechaNacimiento", usuario.fechaNacimiento ? new Date(usuario.fechaNacimiento) : null);
+      setValue("genero", usuario.genero || "");
+      setValue("telefono", usuario.telefono || "");
+      setValue("direccion", usuario.direccion || "");
+      setValue("nacionalidad", usuario.nacionalidad || "");
+      setValue("roles", usuario.roles || []);
+      setValue("password", "");
+    } else {
+      setFileDocuments([]);
+      setTotalSize(0);
+      reset({
+        id: 0,
+        username: "",
+        correo: "",
+        password: "",
+        nombres: "",
+        apellidos: "",
+        fechaNacimiento: null,
+        genero: "",
+        telefono: "",
+        direccion: "",
+        nacionalidad: "",
+        roles: [],
+      });
     }
   };
 
-  const onSubmit = async () => {
-    console.log(getValues());
-    if (flagAction == ActionTypeEnum.CREATE) {
-      //TODO call service create usuario
-    } else if (flagAction == ActionTypeEnum.UPDATE) {
-      //TODO call service update usuario
+  const onSubmit = async (values: UsuarioFormValues) => {
+    let formattedFecha = "";
+    if (values.fechaNacimiento) {
+      if (values.fechaNacimiento instanceof Date) {
+        formattedFecha = values.fechaNacimiento.toISOString().split("T")[0];
+      } else {
+        formattedFecha = String(values.fechaNacimiento);
+      }
     }
-    // reset();
+
+    const documentos: DocumentoRequest[] = fileDocuments.map((item) => ({
+      tipo: item.tipo || item.file.type || "documento",
+      archivo: item.file,
+      detalle: item.detalle,
+    }));
+
+    const request: UsuarioRequest = {
+      username: values.username,
+      correo: values.correo,
+      password: values.password,
+      nombres: values.nombres,
+      apellidos: values.apellidos,
+      fechaNacimiento: formattedFecha,
+      genero: values.genero,
+      telefono: values.telefono || null,
+      direccion: values.direccion,
+      nacionalidad: values.nacionalidad,
+      roles: values.roles || [],
+      documentos: documentos,
+    };
+
+    try {
+      if (flagAction === ActionTypeEnum.CREATE) {
+        await createUsuario(request);
+        toast.current?.show({ severity: 'success', summary: 'Exitoso', detail: 'Usuario creado', life: 3000 });
+      } else if (flagAction === ActionTypeEnum.UPDATE) {
+        await updateUsuario(values.id, request);
+        toast.current?.show({ severity: 'success', summary: 'Exitoso', detail: 'Usuario actualizado', life: 3000 });
+      }
+      hideDialog(true);
+    } catch (error) {
+      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Error al guardar el usuario', life: 3000 });
+    }
   };
 
   const closeForm = (updateData?: boolean) => {
@@ -122,51 +188,60 @@ export default function UsuariosForm({
 
   useEffect(() => {
     initForm();
-  }, []);
+  }, [usuario, flagAction]);
 
-  //FILE MANAGEMENT
+  // FILE MANAGEMENT
 
   const onTemplateSelect = (e: FileUploadSelectEvent) => {
-    let _totalSize = totalSize;
-    let files = e.files;
-    setFilesSelected(files);
-    for (let i = 0; i < files.length; i++) {
-      _totalSize += files[i].size || 0;
-    }
+    let _totalSize = 0;
+    const selectedFiles = Array.from(e.files);
 
+    const updatedDocItems: FileDocumentItem[] = selectedFiles.map((file) => {
+      const existing = fileDocuments.find(
+        (doc) => doc.file === file || (doc.file.name === file.name && doc.file.size === file.size)
+      );
+      return (
+        existing || {
+          file: file,
+          detalle: file.name,
+          tipo: file.type || "documento",
+        }
+      );
+    });
+
+    setFileDocuments(updatedDocItems);
+    _totalSize = selectedFiles.reduce((acc, file) => acc + (file.size || 0), 0);
     setTotalSize(_totalSize);
   };
 
-  const onTemplateUpload = (e: FileUploadUploadEvent) => {
-    let _totalSize = 0;
-
-    e.files.forEach((file) => {
-      _totalSize += file.size || 0;
-    });
-
-    setTotalSize(_totalSize);
-    toast.current?.show({
-      severity: "info",
-      summary: "Success",
-      detail: "File Uploaded",
-    });
+  const handleDetalleChange = (file: File, newDetalle: string) => {
+    setFileDocuments((prev) =>
+      prev.map((item) =>
+        item.file === file || (item.file.name === file.name && item.file.size === file.size)
+          ? { ...item, detalle: newDetalle }
+          : item
+      )
+    );
   };
 
   const onTemplateRemove = (file: File, callback: Function) => {
-    setTotalSize(totalSize - file.size);
-    const filesCurrent = filesSelected.filter(f=>f==file);
-    setFilesSelected(filesCurrent);
-    callback();
+    setTotalSize((prev) => Math.max(0, prev - (file.size || 0)));
+    setFileDocuments((prev) =>
+      prev.filter((item) => item.file !== file && (item.file.name !== file.name || item.file.size !== file.size))
+    );
+    if (typeof callback === "function") {
+      callback();
+    }
   };
 
   const onTemplateClear = () => {
     setTotalSize(0);
-    setFilesSelected([]);
+    setFileDocuments([]);
   };
 
   const headerTemplate = (options: FileUploadHeaderTemplateOptions) => {
-    const { className, chooseButton, uploadButton, cancelButton } = options;
-    const value = totalSize / 10000;
+    const { className, chooseButton, cancelButton } = options;
+    const value = Math.min(100, (totalSize / 1000000) * 100);
     const formatedValue =
       fileUploadRef && fileUploadRef.current
         ? fileUploadRef.current.formatSize(totalSize)
@@ -174,21 +249,18 @@ export default function UsuariosForm({
 
     return (
       <div
-        className={className}
-        style={{
-          backgroundColor: "transparent",
-          display: "flex",
-          alignItems: "center",
-        }}
+        className={`${className} flex items-center justify-between gap-3 p-3 bg-transparent`}
       >
-        {chooseButton}
-        {cancelButton}
-        <div className="flex align-items-center gap-3 ml-auto">
-          <span>{formatedValue} / 1 MB</span>
+        <div className="flex items-center gap-2">
+          {chooseButton}
+          {cancelButton}
+        </div>
+        <div className="flex items-center gap-3 ml-auto">
+          <span className="text-sm font-medium">{formatedValue} / 1 MB</span>
           <ProgressBar
             value={value}
             showValue={false}
-            style={{ width: "10rem", height: "12px" }}
+            style={{ width: "8rem", height: "10px" }}
           ></ProgressBar>
         </div>
       </div>
@@ -196,53 +268,73 @@ export default function UsuariosForm({
   };
 
   const itemTemplate = (inFile: object, props: ItemTemplateOptions) => {
-    const file = inFile as any; // may include objectURL provided by upload component
+    const file = inFile as any;
+    const objectURL =
+      file.objectURL ||
+      (file instanceof File ? URL.createObjectURL(file) : file.archivo || "");
+
+    const docItem = fileDocuments.find(
+      (item) => item.file === file || (item.file.name === file.name && item.file.size === file.size)
+    );
+    const detalleValue = docItem ? docItem.detalle : file.name || "";
+
     return (
-      <div className="flex align-items-center flex-wrap">
-        <div className="flex align-items-center" style={{ width: "40%" }}>
-          <img
-            alt={file.name}
-            role="presentation"
-            src={file.objectURL || URL.createObjectURL(file)}
-            width={100}
-          />
-          <span className="flex flex-column text-left ml-3">
-            {file.name}
-            <small>{new Date().toLocaleDateString()}</small>
-          </span>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 border-b border-gray-200 gap-4">
+        <div className="flex items-center gap-3 min-w-0 flex-1 w-full">
+          {objectURL ? (
+            <img
+              alt={file.name || "imagen"}
+              role="presentation"
+              src={objectURL}
+              className="w-14 h-14 object-cover rounded border flex-shrink-0"
+            />
+          ) : (
+            <div className="w-14 h-14 bg-gray-100 rounded border flex items-center justify-center flex-shrink-0">
+              <i className="pi pi-file text-xl text-gray-400" />
+            </div>
+          )}
+          <div className="flex flex-col flex-1 min-w-0 gap-1">
+            <span className="font-medium text-gray-800 text-sm truncate">
+              {file.name}
+            </span>
+            <div className="flex items-center gap-2 w-full mt-1">
+              <span className="text-xs text-gray-600 font-semibold flex-shrink-0">
+                Detalle:
+              </span>
+              <InputText
+                value={detalleValue}
+                onChange={(e) => handleDetalleChange(file, e.target.value)}
+                placeholder="Ingrese detalle del documento"
+                className="p-inputtext-sm text-xs py-1 px-2 w-full max-w-sm"
+              />
+            </div>
+          </div>
         </div>
-        <Tag
-          value={props.formatSize}
-          severity="warning"
-          className="px-3 py-2"
-        />
-        <Button
-          type="button"
-          icon="pi pi-times"
-          className="p-button-outlined p-button-rounded p-button-danger ml-auto"
-          onClick={() => onTemplateRemove(file, props.onRemove)}
-        />
+        <div className="flex items-center gap-3 flex-shrink-0 self-end sm:self-center">
+          <Tag
+            value={props.formatSize}
+            severity="warning"
+            className="px-2 py-1 text-xs"
+          />
+          <Button
+            type="button"
+            icon="pi pi-times"
+            severity="danger"
+            rounded
+            outlined
+            onClick={() => onTemplateRemove(file, props.onRemove)}
+          />
+        </div>
       </div>
     );
   };
 
   const emptyTemplate = () => {
     return (
-      <div className="flex align-items-center flex-column">
-        <i
-          className="pi pi-image mt-3 p-5"
-          style={{
-            fontSize: "5em",
-            borderRadius: "50%",
-            backgroundColor: "var(--surface-b)",
-            color: "var(--surface-d)",
-          }}
-        ></i>
-        <span
-          style={{ fontSize: "1.2em", color: "var(--text-color-secondary)" }}
-          className="my-5"
-        >
-          Drag and Drop Image Here
+      <div className="flex flex-col items-center justify-center p-6 text-center">
+        <i className="pi pi-image p-4 mb-2 text-4xl rounded-full bg-gray-100 text-gray-400"></i>
+        <span className="text-sm text-gray-600 font-medium">
+          Arrastra y suelta imágenes aquí
         </span>
       </div>
     );
@@ -253,12 +345,6 @@ export default function UsuariosForm({
     iconOnly: true,
     className: "custom-choose-btn p-button-rounded p-button-outlined",
   };
-  const uploadOptions = {
-    icon: "pi pi-fw pi-cloud-upload",
-    iconOnly: true,
-    className:
-      "custom-upload-btn p-button-success p-button-rounded p-button-outlined",
-  };
   const cancelOptions = {
     icon: "pi pi-fw pi-times",
     iconOnly: true,
@@ -268,40 +354,30 @@ export default function UsuariosForm({
 
   return (
     <>
-      <form className="w-full mt-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="w-full mt-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
-            <Controller
-              name="username"
+            <InputTextComponent
               control={control}
+              name="username"
+              placeholder="Ingrese el nombre de usuario"
               rules={{
                 required: "Username requerido",
                 maxLength: {
                   value: 50,
-                  message: "Username debe tener maximo 50 caracteres",
+                  message: "Username debe tener máximo 50 caracteres",
                 },
               }}
-              render={({ field, fieldState }) => (
-                <>
-                  <InputText
-                    id={field.name}
-                    placeholder="Ingrese el nombre de usuario"
-                    {...field}
-                  />
-                  {fieldState.error && (
-                    <small>{fieldState.error.message}</small>
-                  )}
-                </>
-              )}
             />
           </div>
           <div>
             <InputTextComponent
               control={control}
               name="correo"
+              placeholder="Ingrese el correo"
               rules={{
                 required: "Correo requerido",
-                pattern: { value: /^\S+@\S+$/i, message: "Correo no valido" },
+                pattern: { value: /^\S+@\S+$/i, message: "Correo no válido" },
               }}
             />
           </div>
@@ -309,28 +385,34 @@ export default function UsuariosForm({
             <InputPasswordComponent
               control={control}
               name="password"
+              placeholder="Ingrese la contraseña"
               toggleMask={true}
               feedback={false}
-              rules={{
-                required: "Password requerido",
-                pattern: {
-                  value:
-                    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^a-zA-Z0-9]).{8,16}$/,
-                  message:
-                    "La contraseña debe tener entre 8 y 16 caracteres, e incluir al menos una letra mayúscula, una minúscula, un número y un carácter especial.",
-                },
-              }}
+              rules={
+                flagAction === ActionTypeEnum.CREATE
+                  ? {
+                      required: "Password requerido",
+                      pattern: {
+                        value:
+                          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,16}$/,
+                        message:
+                          "La contraseña debe tener entre 8 y 16 caracteres, e incluir al menos una letra mayúscula, una minúscula, un número y un carácter especial.",
+                      },
+                    }
+                  : undefined
+              }
             />
           </div>
           <div>
             <InputTextComponent
               control={control}
               name="nombres"
+              placeholder="Ingrese los nombres"
               rules={{
                 required: "Nombres requerido",
                 maxLength: {
                   value: 100,
-                  message: "Nombres debe tener maximo 100 caracteres",
+                  message: "Nombres debe tener máximo 100 caracteres",
                 },
               }}
             />
@@ -339,11 +421,38 @@ export default function UsuariosForm({
             <InputTextComponent
               control={control}
               name="apellidos"
+              placeholder="Ingrese los apellidos"
               rules={{
                 required: "Apellidos requerido",
                 maxLength: {
                   value: 100,
-                  message: "Apellidos debe tener maximo 100 caracteres",
+                  message: "Apellidos debe tener máximo 100 caracteres",
+                },
+              }}
+            />
+          </div>
+          <div>
+            <InputTextComponent
+              control={control}
+              name="telefono"
+              placeholder="Ingrese el teléfono"
+              rules={{
+                maxLength: {
+                  value: 20,
+                  message: "Teléfono debe tener máximo 20 caracteres",
+                },
+              }}
+            />
+          </div>
+          <div>
+            <InputTextComponent
+              control={control}
+              name="direccion"
+              placeholder="Ingrese la dirección"
+              rules={{
+                maxLength: {
+                  value: 200,
+                  message: "Dirección debe tener máximo 200 caracteres",
                 },
               }}
             />
@@ -352,20 +461,22 @@ export default function UsuariosForm({
             <CalendarComponent
               control={control}
               name="fechaNacimiento"
+              placeholder="Fecha de nacimiento"
               rules={{
-                required: "Fecha de nacimiento requerido",
+                required: "Fecha de nacimiento requerida",
               }}
-              dateFormat="dd/mm/yy"
+              dateFormat="yy-mm-dd"
             />
           </div>
           <div>
             <DropdownComponent
               control={control}
               name="nacionalidad"
+              placeholder="Seleccione nacionalidad"
               rules={{
                 maxLength: {
                   value: 50,
-                  message: "Nacionalidad debe tener maximo 50 caracteres",
+                  message: "Nacionalidad debe tener máximo 50 caracteres",
                 },
               }}
               options={nacionalidad}
@@ -377,6 +488,7 @@ export default function UsuariosForm({
             <DropdownComponent
               control={control}
               name="genero"
+              placeholder="Seleccione género"
               options={generos}
               optionLabel="label"
               optionValue="label"
@@ -386,58 +498,56 @@ export default function UsuariosForm({
             <MultiSelectComponent
               control={control}
               name="roles"
+              placeholder="Seleccione roles"
               options={roles}
               optionLabel="nombre"
               optionValue="id"
             />
           </div>
         </div>
-        <div className="grid grid-cols-1">
-            <Tooltip
-              target=".custom-choose-btn"
-              content="Choose"
-              position="bottom"
-            />
-            <Tooltip
-              target=".custom-cancel-btn"
-              content="Clear"
-              position="bottom"
-            />
+        <div className="grid grid-cols-1 mb-4">
+          <Tooltip
+            target=".custom-choose-btn"
+            content="Choose"
+            position="bottom"
+          />
+          <Tooltip
+            target=".custom-cancel-btn"
+            content="Clear"
+            position="bottom"
+          />
 
-            <FileUpload
-              ref={fileUploadRef}
-              name="demo[]"
-              url="/api/upload"
-              multiple
-              accept="image/*"
-              maxFileSize={1000000}
-              onUpload={onTemplateUpload}
-              onSelect={onTemplateSelect}
-              onError={onTemplateClear}
-              onClear={onTemplateClear}
-              headerTemplate={headerTemplate}
-              itemTemplate={itemTemplate}
-              emptyTemplate={emptyTemplate}
-              chooseOptions={chooseOptions}
-              uploadOptions={uploadOptions}
-              cancelOptions={cancelOptions}
-            />
-          </div>
-          <div>
-            <Button
-              type="button"
-              label="Cancelar"
-              severity="danger"
-              className="w-full"
-              onClick={() => closeForm()}
-            />
-            <Button
-              type="button"
-              label="Guardar"
-              className="w-full"
-              onClick={() => onSubmit()}
-            />
-          </div>
+          <FileUpload
+            ref={fileUploadRef}
+            name="documentos[]"
+            multiple
+            accept="image/*"
+            maxFileSize={1000000}
+            customUpload
+            onSelect={onTemplateSelect}
+            onError={onTemplateClear}
+            onClear={onTemplateClear}
+            headerTemplate={headerTemplate}
+            itemTemplate={itemTemplate}
+            emptyTemplate={emptyTemplate}
+            chooseOptions={chooseOptions}
+            cancelOptions={cancelOptions}
+          />
+        </div>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            label="Cancelar"
+            severity="danger"
+            className="w-full"
+            onClick={() => closeForm()}
+          />
+          <Button
+            type="submit"
+            label="Guardar"
+            className="w-full"
+          />
+        </div>
       </form>
     </>
   );
