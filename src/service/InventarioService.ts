@@ -40,19 +40,9 @@ export class InventarioService {
         }
     }
 
-    public static async getAlmacenes(sucursalId: number): Promise<AlmacenResponse[]>{
-        try {
-            const response = await apiClient.get<AlmacenResponse[]>(`/almacenes/${sucursalId}`);
-            return response.data; 
-        } catch (error) {
-            console.error('Error al crear el rol:', error);
-            throw new Error('Error creando el rol');
-        }
-    }
-
     public static async getSucursales(): Promise<SucursalResponse[]>{
         try {
-            const response = await apiClient.put<SucursalResponse[]>(`/sucursales`);
+            const response = await apiClient.get<SucursalResponse[]>(`/sucursales`);
             return response.data; 
         } catch (error) {
             console.error('Error al crear el rol:', error);

@@ -35,6 +35,10 @@ export const useUsuarios = () => {
         }
     };
 
+    const findUsuarioById = async (id: number): Promise<UsuarioResponse> => {
+        return getUsuarioById(id);
+    };
+
     const createUsuario = async (usuario: UsuarioRequest): Promise<UsuarioResponse> => {
         setLoading(true);
         setError("");
@@ -79,6 +83,7 @@ export const useUsuarios = () => {
     return {
         getUsuarios,
         getUsuarioById,
+        findUsuarioById,
         createUsuario,
         updateUsuario,
         deleteUsuario,

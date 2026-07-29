@@ -1,3 +1,4 @@
+'use client'
 import { AlmacenResponse } from "@/types/response/AlmacenResponse";
 import { ClienteProveedorResponse } from "@/types/response/ClienteProveedorResponse";
 import { ProductoResponse } from "@/types/response/ProductoResponse";
@@ -17,6 +18,7 @@ import { InputNumber } from "primereact/inputnumber";
 import InputTextComponent from "../common/InputTextComponent";
 import { useClienteProveedor } from "@/hooks/useClienteProveedor";
 import { useThemeStore } from "@/state-management/zustand/useThemeStore";
+import { useAlmacen } from "@/hooks/useAlmacen";
 
 export default function NotasForm() {
   const [tipo, setTipo] = useState<string[]>(["Compra", "Venta"]);
@@ -36,8 +38,9 @@ export default function NotasForm() {
   const toast = useRef<Toast>(null);
   const usuarioId = Cookies.get("identifier");
   const { getClientesProveedores } = useClienteProveedor();
-  const { getSucursales, getAlmacenesBySucursal, getProductosAlmacen } =
+  const { getSucursales, getProductosAlmacen } =
     useInventario();
+  const {getAlmacenesBySucursal} = useAlmacen();
   const {
     control,
     formState: { errors },
@@ -300,7 +303,7 @@ export default function NotasForm() {
               label="Agregar movimiento"
               severity="success"
               onClick={addMovimiento}
-              disabled={!watch("almacenId")}
+              //disabled={!watch("almacenId")}
             />
           }
         >

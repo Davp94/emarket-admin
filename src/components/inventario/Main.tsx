@@ -18,6 +18,7 @@ import { Dropdown } from "primereact/dropdown";
 import { useInventario } from "@/hooks/useInventario";
 import { useThemeStore } from "@/state-management/zustand/useThemeStore";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useAlmacen } from "@/hooks/useAlmacen";
 
 export default function InventarioMain() {
   const [productos, setProductos] =
@@ -34,13 +35,14 @@ export default function InventarioMain() {
   const dt = useRef<DataTable<ProductoResponse[]>>(null);
   const [lazyState, setLazyState] = useState({
     pageSize: 10,
-    pageNumber: 0,
-    sortField: "",
+    pageNumber: 1,
+    sortField: "id",
     sortOrder: "ASC" as "ASC" | "DESC",
   });
   const theme = useThemeStore((state)=>state.theme);
   const { permissions } = usePermissions();
-  const { getSucursales, getAlmacenesBySucursal, getProductosPaginacion } = useInventario();
+  const { getSucursales, getProductosPaginacion } = useInventario();
+  const {getAlmacenesBySucursal} = useAlmacen();
 
   const initComponent = async () => {
     try {

@@ -1,6 +1,8 @@
 "use client";
+import { useAuth } from "@/hooks/useAuth";
 import { AuthProvider } from "@/state-management/context/AuthContext";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "primereact/button";
 import { Menu } from "primereact/menu";
 import { MenuItem } from "primereact/menuitem";
@@ -11,10 +13,13 @@ export default function MainLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const {logout} = useAuth();
   const topbarMenu = useRef<Menu>(null);
+  const router = useRouter();
   const navigationItems = [
     { name: "Home", href: "/", icon: "pi pi-home" },
     { name: "Usuarios", href: "/usuarios", icon: "pi pi-user" },
+    { name: "Notas", href: "/notas", icon: "pi pi-user" },
     { name: "Roles", href: "/roles", icon: "pi pi-shield" },
     { name: "Sucursales", href: "/sucursales", icon: "pi pi-building" },
     { name: "Almacenes", href: "/almacenes", icon: "pi pi-warehouse" },
@@ -26,14 +31,15 @@ export default function MainLayout({
       label: "Perfil",
       icon: "pi pi-user",
       command: () => {
-        alert("User profile");
+        router.push('profile')
       },
     },
     {
       label: "Salir",
       icon: "pi pi-sign-out",
       command: () => {
-        alert("Logout");
+        logout();
+        router.push('login')
       },
     },
   ];
@@ -60,7 +66,8 @@ export default function MainLayout({
           <header className="h-16 bg-white shadow flex items-center justify-end px-4">
             <Menu model={topBarItems} popup ref={topbarMenu} />
             <Button
-              icon="pi pi-bars"
+              icon="pi pi-ellipsis-v"
+              className="p-button-text"
               onClick={(e) => topbarMenu.current?.toggle(e)}
             />
           </header>

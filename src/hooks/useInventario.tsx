@@ -36,20 +36,6 @@ export const useInventario = () => {
         }
     }
 
-    const getAlmacenesBySucursal = async (sucursalId: number): Promise<AlmacenResponse[]> => {
-        setLoading(true);
-        setError("");
-        try {
-            const response = await InventarioService.getAlmacenes(sucursalId);
-            return response;
-        } catch (error) {
-            setError("Error al obtener el rol");
-            throw error;
-        } finally {
-            setLoading(false);
-        }
-    }
-
     const getProductosAlmacen = async (almacenId: number): Promise<ProductoResponse[]> => {
         setLoading(true);
         setError("");
@@ -80,7 +66,6 @@ export const useInventario = () => {
 
     return {
         getProductosPaginacion,
-        getAlmacenesBySucursal,
         getSucursales,
         getProductosAlmacen,
         loading,
