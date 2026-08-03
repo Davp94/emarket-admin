@@ -1,12 +1,14 @@
 "use client";
 import { useAuth } from "@/hooks/useAuth";
+import { AuthService } from "@/service/AuthService";
 import { AuthProvider } from "@/state-management/context/AuthContext";
+import { wrapApiHandler } from "next/dist/server/api-utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "primereact/button";
 import { Menu } from "primereact/menu";
 import { MenuItem } from "primereact/menuitem";
-import { useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 export default function MainLayout({
   children,
@@ -43,6 +45,23 @@ export default function MainLayout({
       },
     },
   ];
+
+  const handleSessionExpired = useCallback(async () => {
+    if(AuthService.isTokenExpired()) {
+      try {
+        await AuthService.refreshToken();
+      } catch (error) {
+        await logout();
+        router.push("/login")
+      }
+    }
+  },[logout, router]);
+
+  useEffect(() => {
+    handleSessionExpired();
+    const interval = setInterval(handleSessionExpired, 60);
+    return () => clearInterval(interval);    
+  }, [handleSessionExpired])
 
   return (
     <>
