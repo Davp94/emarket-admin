@@ -19,6 +19,8 @@ import InputTextComponent from "../common/InputTextComponent";
 import { useClienteProveedor } from "@/hooks/useClienteProveedor";
 import { useThemeStore } from "@/state-management/zustand/useThemeStore";
 import { useAlmacen } from "@/hooks/useAlmacen";
+import { useNotas } from "@/hooks/useNotas";
+import { NotaRequest } from "@/types/request/NotaRequest";
 
 export default function NotasForm() {
   const [tipo, setTipo] = useState<string[]>(["Compra", "Venta"]);
@@ -41,6 +43,7 @@ export default function NotasForm() {
   const { getSucursales, getProductosAlmacen } =
     useInventario();
   const {getAlmacenesBySucursal} = useAlmacen();
+  const { createNota } = useNotas();
   const {
     control,
     formState: { errors },
@@ -200,7 +203,34 @@ export default function NotasForm() {
   const onSubmit = async () => {
     try {
       const formData = getValues();
-      console.log(formData);
+      const payload: NotaRequest = {
+        tipoNota: formData.tipo,
+        impuestos: Number(formData.impuestos) || 0,
+        descuentos: Number(formData.descuentos) || 0,
+        observaciones: formData.observaciones || "",
+        usuarioId: Number(formData.usuarioId),
+        clienteProveedorId: Number(formData.clienteProveedorId),
+        movimientos: (formData.movimientos || []).map((mov: any) => ({
+          productoId: Number(mov.productoId),
+          almacenId: Number(mov.almacenId || formData.almacenId),
+          cantidad: Number(mov.cantidad),
+          tipoMovimiento: formData.tipo,
+          precioUnitarioCompra: Number(mov.precioUnitarioCompra) || 0,
+          precioUnitarioVenta: Number(mov.precioUnitarioVenta) || 0,
+          observaciones: mov.observaciones || "",
+        })),
+      };
+
+      await createNota(payload);
+      toast.current?.show({
+        severity: "success",
+        summary: "Éxito",
+        detail: "Nota guardada correctamente",
+        life: 3000,
+      });
+      setTimeout(() => {
+        router.push("/notas");
+      }, 1000);
     } catch (error) {
       toast.current?.show({
         severity: "error",

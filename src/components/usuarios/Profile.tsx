@@ -63,7 +63,7 @@ export default function UserProfile() {
                     {renderField("Fecha de nacimiento", usuario.fechaNacimiento)}
                     {renderField("Género", usuario.genero)}
                     {renderField("Roles", usuario.roles.join(", "))}
-                    {renderField("Documentos", usuario.documentos?.length ? usuario.documentos.map((doc) => `${doc.tipoDocumento ?? "Documento"}: ${doc.nombre ?? "Sin nombre"}`).join(" | ") : "Sin documentos")}
+                    {renderField("Documentos", usuario.documentos?.length ? usuario.documentos.map((doc) => `${doc.tipo ?? "Documento"}: ${doc.detalle ?? "Sin nombre"}`).join(" | ") : "Sin documentos")}
                 </div>
             )}
 

@@ -73,16 +73,16 @@ export class UsuarioService {
         formData.set('direccion', usuarios.direccion ?? '');
         formData.set('nacionalidad', usuarios.nacionalidad ?? '');
 
-        formData.set('roles', JSON.stringify(usuarios.roles ?? []));
         (usuarios.roles ?? []).forEach((role, index) => {
-            formData.append(`roles[${index}]`, String(role)); //roles[0]=1, roles[1]=5, roles[2]=5 documentos[0].tipo documentos[0].detalle documentos[1] ...
+            formData.append(`roles[${index}]`, String(role));
         });
 
         (usuarios.documentos ?? []).forEach((documento, index) => {
-            formData.append(`documentos[${index}][tipo]`, documento.tipo ?? 'documento');
-            formData.append(`documentos[${index}][detalle]`, documento.detalle ?? '');
-            formData.append(`documentos[${index}][archivo]`, documento.archivo);
-            formData.append(`documentos[${index}]`, documento.archivo, documento.archivo.name);
+            formData.append(`documentos[${index}].tipo`, documento.tipo ?? 'documento');
+            formData.append(`documentos[${index}].detalle`, documento.detalle ?? '');
+            if (documento.archivo) {
+                formData.append(`documentos[${index}].archivo`, documento.archivo, documento.archivo.name);
+            }
         });
 
         return formData;

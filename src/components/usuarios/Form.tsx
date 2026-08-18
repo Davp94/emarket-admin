@@ -110,7 +110,21 @@ export default function UsuariosForm({
       setValue("correo", usuario.correo || "");
       setValue("nombres", usuario.nombres || "");
       setValue("apellidos", usuario.apellidos || "");
-      setValue("fechaNacimiento", usuario.fechaNacimiento ? new Date(usuario.fechaNacimiento) : null);
+      if (usuario.fechaNacimiento) {
+        if (typeof usuario.fechaNacimiento === "string" && usuario.fechaNacimiento.includes("/")) {
+          const parts = usuario.fechaNacimiento.split("/");
+          if (parts.length === 3) {
+            const [d, m, y] = parts.map((p) => parseInt(p, 10));
+            setValue("fechaNacimiento", new Date(y, m - 1, d));
+          } else {
+            setValue("fechaNacimiento", new Date(usuario.fechaNacimiento));
+          }
+        } else {
+          setValue("fechaNacimiento", new Date(usuario.fechaNacimiento));
+        }
+      } else {
+        setValue("fechaNacimiento", null);
+      }
       setValue("genero", usuario.genero || "");
       setValue("telefono", usuario.telefono || "");
       setValue("direccion", usuario.direccion || "");
@@ -140,8 +154,25 @@ export default function UsuariosForm({
   const onSubmit = async (values: UsuarioFormValues) => {
     let formattedFecha = "";
     if (values.fechaNacimiento) {
-      if (values.fechaNacimiento instanceof Date) {
-        formattedFecha = values.fechaNacimiento.toISOString().split("T")[0];
+      if (values.fechaNacimiento instanceof Date && !isNaN(values.fechaNacimiento.getTime())) {
+        const day = String(values.fechaNacimiento.getDate()).padStart(2, "0");
+        const month = String(values.fechaNacimiento.getMonth() + 1).padStart(2, "0");
+        const year = values.fechaNacimiento.getFullYear();
+        formattedFecha = `${day}/${month}/${year}`;
+      } else if (typeof values.fechaNacimiento === "string") {
+        const str = values.fechaNacimiento.trim();
+        if (str.includes("-")) {
+          const cleanStr = str.split("T")[0];
+          const parts = cleanStr.split("-");
+          if (parts.length === 3) {
+            const [y, m, d] = parts;
+            formattedFecha = `${d.padStart(2, "0")}/${m.padStart(2, "0")}/${y}`;
+          } else {
+            formattedFecha = str;
+          }
+        } else {
+          formattedFecha = str;
+        }
       } else {
         formattedFecha = String(values.fechaNacimiento);
       }
@@ -391,14 +422,14 @@ export default function UsuariosForm({
               rules={
                 flagAction === ActionTypeEnum.CREATE
                   ? {
-                      required: "Password requerido",
-                      pattern: {
-                        value:
-                          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,16}$/,
-                        message:
-                          "La contraseña debe tener entre 8 y 16 caracteres, e incluir al menos una letra mayúscula, una minúscula, un número y un carácter especial.",
-                      },
-                    }
+                    required: "Password requerido",
+                    pattern: {
+                      value:
+                        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,16}$/,
+                      message:
+                        "La contraseña debe tener entre 8 y 16 caracteres, e incluir al menos una letra mayúscula, una minúscula, un número y un carácter especial.",
+                    },
+                  }
                   : undefined
               }
             />
@@ -465,7 +496,7 @@ export default function UsuariosForm({
               rules={{
                 required: "Fecha de nacimiento requerida",
               }}
-              dateFormat="yy-mm-dd"
+              dateFormat="dd/mm/yy"
             />
           </div>
           <div>
